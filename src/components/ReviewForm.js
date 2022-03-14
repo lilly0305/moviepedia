@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { createReview } from "../api";
 import FileInput from "./FileInput";
 import RatingInput from "./RatingInput";
 import './ReviewForm.css';
@@ -11,10 +10,16 @@ const INITIAL_VALUES = {
   imgFile: null,
 }
 
-function ReviewForm() {
+function ReviewForm({ 
+  initialValues=INITIAL_VALUES, 
+  initialPreview, 
+  onCancel,
+  onSubmit,
+  onSubmitSuccess,
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittingError, setSubmittingError] = useState(null);
-  const [values, setValues] = useState(INITIAL_VALUES)
+  const [values, setValues] = useState(initialValues)
 
   const handleChange = (name, value) => {
     setValues((prevValues) => ({
@@ -36,10 +41,12 @@ function ReviewForm() {
     formData.append('content', values.content);
     formData.append('imgFile', values.imgFile);
 
+    let result;
+
     try {
       setSubmittingError(null);
       setIsSubmitting(true);
-      await createReview(formData);
+      result = await onSubmit(formData);
     }catch (error){
       setSubmittingError(error);
       return;
@@ -47,18 +54,19 @@ function ReviewForm() {
       setIsSubmitting(false);
     }
 
-    console.log(values);
-
+    const { review } = result;
     setValues(INITIAL_VALUES);
+    onSubmitSuccess(review);
   };
 
   return (
     <form className="ReviewForm" onSubmit={handleSubmit}>
       <input name="title" value={values.title} onChange={handleInputChange}></input>
-      <FileInput name="imgFile" value={values.imgFile} onChange={handleChange} />
+      <FileInput name="imgFile" value={values.imgFile} initialPreview={initialPreview} onChange={handleChange} />
       <RatingInput name='rating' value={values.rating} onChange={handleChange} />
       <textarea  name="content" value={values.content} onChange={handleInputChange} />
       <button type="submit" disabled={isSubmitting}>확인</button>
+      {onCancel && <button onClick={onCancel}>취소</button>}
 
       {submittingError?.message && <div>{submittingError.message}</div>}
     </form>
