@@ -28,7 +28,7 @@ export async function createReview(formData) {
   return body;
 }
 
-export async function updateReview({id, formData}) {
+export async function updateReview(id, formData) {
   // id 값을 받아와 수정할 컨텐츠를 알려준다.
   const response = await fetch(`${BASE_URL}/film-reviews/${id}`,{
     // 수정을 의미하는 PUT으로 바꿔준다.
@@ -37,6 +37,17 @@ export async function updateReview({id, formData}) {
   });
   if (!response.ok) {
     throw new Error('리뷰를 수정하는 데 실패했습니다.')
+  }
+  const body = await response.json();
+  return body;
+}
+
+export async function deleteReview(id) {
+  const response = await fetch(`${BASE_URL}/film-reviews/${id}`,{
+    method: 'DELETE'
+  });
+  if (!response.ok) {
+    throw new Error('리뷰를 삭제하는 데 실패했습니다.')
   }
   const body = await response.json();
   return body;
