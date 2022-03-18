@@ -1,11 +1,10 @@
-import { useCallback } from "react/cjs/react.development";
 import { useState } from "react/cjs/react.production.min";
 
 function useAsync (asyncFunction) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
 
-  const wrappedFunction = useCallback(async (...args) => {
+  const wrappedFunction = async (...args) => {
     // network request를 보낼 때 실행할 함수
     // loading과 error 처리를 담당
     try {
@@ -21,7 +20,7 @@ function useAsync (asyncFunction) {
     } finally {
       setPending(false);
     }
-  },[asyncFunction]);
+  }
 
   return[pending, error, wrappedFunction];
 

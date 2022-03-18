@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { createReview, deleteReview, getReviews, updateReview } from "../api";
 import ReviewList from "./ReviewList";
 import ReviewForm from "./ReviewForm";
-import useAsync from "../hooks/useAsync";
-import { useCallback } from "react/cjs/react.production.min";
 
 const LIMIT = 6;
 
@@ -12,7 +10,8 @@ function App() {
   const [order, setOrder] = useState('createdAt');
   const [offset, setOffset] = useState(0);
   const [hasNext, setHasNext] = useState(false);
-  const [isLoading, loadingError, getReviewsAsync] = useAsync(getReviews);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingError, setLoadingError] = useState(null);
 
   // const sortedItems = items.sort((a, b) => b.rating - a.rating);
   const sortedItems = items.sort((a, b) => b[order] - a[order]);
@@ -27,9 +26,20 @@ function App() {
     setItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
-  const handleLoad = useCallback(async (options) => {
-    const result = await getReviewsAsync(options);
-    if(!result) return;
+  const handleLoad = async (options) => {
+
+    let result;
+    try{
+      setIsLoading(true);
+      setLoadingError(null);
+
+      result = await getReviews(options);
+    } catch (error){
+      setLoadingError(error);
+      return;
+    } finally{
+      setIsLoading(false);
+    }
 
     const { reviews, paging } = result;
 
@@ -38,9 +48,9 @@ function App() {
     } else {
       setItems((prevItems) => [...prevItems, ...reviews]);
     }
-    setOffset(options.offset + reviews.limit);
+    setOffset(options.offset + reviews.length);
     setHasNext(paging.hasNext);
-  },[getReviewsAsync]);
+  }
 
   const handleLoadMore = () => {
     handleLoad({ order, offset, limit: LIMIT });
@@ -64,7 +74,7 @@ function App() {
 
   useEffect(() => {
     handleLoad({ order, offset: 0, limit: LIMIT });
-  }, [order, handleLoad]);
+  }, [order]);
 
   return (
   <div>
